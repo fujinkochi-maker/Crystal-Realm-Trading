@@ -4,4 +4,8 @@
   "compatibility_date": "2025-09-24",
   "compatibility_flags": ["nodejs_compat"],
   "main": "src/server.ts",
+  "vars": {
+    "DISCORD_CLIENT_ID": "1507062901020561471",
+    "DISCORD_GUILD_ID": "1507037495341220001",
+  },
 }

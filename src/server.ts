@@ -91,7 +91,7 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === "/api/auth/discord") {
-      const clientId = getEnvVar("VITE_DISCORD_CLIENT_ID", env);
+      const clientId = getEnvVar("DISCORD_CLIENT_ID", env);
       const redirectUri = getRedirectUri(url.origin);
       return Response.redirect(getOAuthUrl(clientId, redirectUri), 302);
     }
@@ -101,10 +101,10 @@ export default {
       if (!code) return new Response("Missing authorization code", { status: 400 });
 
       try {
-        const clientId = getEnvVar("VITE_DISCORD_CLIENT_ID", env);
-        const clientSecret = getEnvVar("VITE_DISCORD_CLIENT_SECRET", env);
-        const guildId = getEnvVar("VITE_DISCORD_GUILD_ID", env);
-        const jwtSecret = getEnvVar("VITE_JWT_SECRET", env);
+        const clientId = getEnvVar("DISCORD_CLIENT_ID", env);
+        const clientSecret = getEnvVar("DISCORD_CLIENT_SECRET", env);
+        const guildId = getEnvVar("DISCORD_GUILD_ID", env);
+        const jwtSecret = getEnvVar("JWT_SECRET", env);
         const redirectUri = getRedirectUri(url.origin);
 
         const token = await exchangeCode(code, clientId, clientSecret, redirectUri);
@@ -158,7 +158,7 @@ a{color:#00e5ff}
         });
       }
 
-      const jwtSecret = getEnvVar("VITE_JWT_SECRET", env);
+      const jwtSecret = getEnvVar("JWT_SECRET", env);
       const session = await verifySessionToken(match[1], jwtSecret);
       if (!session) {
         return new Response(JSON.stringify({ authed: false }), {
