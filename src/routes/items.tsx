@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Search, ArrowUpDown, Filter } from "lucide-react";
-import { type ItemType, type Item } from "@/data/items";
+import { ITEMS, type ItemType } from "@/data/items";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Nav } from "@/components/nav";
