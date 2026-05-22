@@ -6,7 +6,7 @@ import { type Item, type ItemType } from "@/data/items";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 import heroBg from "@/assets/pixel-hero-bg.jpg";
-import { Save, Shield, ExternalLink, Lock, Unlock, Search, Plus, Trash2, X } from "lucide-react";
+import { Save, Shield, Lock, Unlock, Search, Plus, Trash2, X } from "lucide-react";
 
 const ITEM_TYPES: { value: ItemType | "all"; label: string }[] = [
   { value: "all", label: "All" },
@@ -68,6 +68,34 @@ const updatePrice = createServerFn({ method: "POST" }).handler(async (ctx) => {
   return { ok: success as true };
 });
 
+const updateItem = createServerFn({ method: "POST" }).handler(async (ctx) => {
+  const data = ctx.data as {
+    itemId: number;
+    name?: string;
+    type?: string;
+    price?: string;
+    rarity?: string;
+    image?: string | null;
+    password: string;
+  };
+  const { updateItem: storeUpdateItem, getAdminPassword } = await import("@/lib/item-store");
+  if (data.password !== getAdminPassword()) {
+    return { ok: false as const, error: "Invalid password" };
+  }
+  const success = await storeUpdateItem(
+    data.itemId,
+    {
+      ...(data.name !== undefined && { name: data.name }),
+      ...(data.type !== undefined && { type: data.type as import("@/data/items").ItemType }),
+      ...(data.price !== undefined && { price: data.price }),
+      ...(data.rarity !== undefined && { rarity: data.rarity }),
+      ...(data.image !== undefined && { image: data.image }),
+    },
+    "admin",
+  );
+  return { ok: success as true };
+});
+
 export const Route = createFileRoute("/admin/prices")({
   loader: async () => {
     const { getItems } = await import("@/lib/item-store");
@@ -76,7 +104,7 @@ export const Route = createFileRoute("/admin/prices")({
   component: AdminPrices,
   head: () => ({
     meta: [
-      { title: "Admin — Price Editor | Crystal Realms" },
+      { title: "Admin — Item Editor | Crystal Realms" },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -86,7 +114,7 @@ function AdminPrices() {
   const initialItems = Route.useLoaderData();
   const [password, setPassword] = useState("");
   const [authenticated, setAuthenticated] = useState(false);
-  const [prices, setPrices] = useState<Record<number, string>>({});
+  const [editedItems, setEditedItems] = useState<Record<number, Item>>({});
   const [saving, setSaving] = useState<Record<number, boolean>>({});
   const [typeFilter, setTypeFilter] = useState<ItemType | "all">("all");
   const [search, setSearch] = useState("");
@@ -102,10 +130,11 @@ function AdminPrices() {
   const filtered = useMemo(() => {
     return initialItems.filter((item) => {
       const matchesType = typeFilter === "all" || item.type === typeFilter;
-      const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase());
+      const displayName = (editedItems[item.id]?.name || item.name).toLowerCase();
+      const matchesSearch = displayName.includes(search.toLowerCase());
       return matchesType && matchesSearch;
     });
-  }, [initialItems, typeFilter, search]);
+  }, [initialItems, editedItems, typeFilter, search]);
 
   useEffect(() => {
     const saved = sessionStorage.getItem("admin_pw");
@@ -116,11 +145,11 @@ function AdminPrices() {
   }, []);
 
   useEffect(() => {
-    const initial: Record<number, string> = {};
+    const initial: Record<number, Item> = {};
     for (const item of initialItems) {
-      initial[item.id] = item.price;
+      initial[item.id] = { ...item };
     }
-    setPrices(initial);
+    setEditedItems(initial);
   }, [initialItems]);
 
   function handleLogin(e: React.FormEvent) {
@@ -140,22 +169,49 @@ function AdminPrices() {
   }
 
   async function handleSave(item: Item) {
-    const newPrice = prices[item.id]?.trim();
-    if (!newPrice) {
-      toast.error("Price cannot be empty");
+    const edit = editedItems[item.id];
+    if (!edit) return;
+
+    const payload: Record<string, string | number | null> = { itemId: item.id, password };
+    const changed: string[] = [];
+    if (edit.name !== item.name && edit.name.trim()) {
+      payload.name = edit.name;
+      changed.push("name");
+    }
+    if (edit.type !== item.type) {
+      payload.type = edit.type;
+      changed.push("type");
+    }
+    if (edit.rarity !== item.rarity) {
+      payload.rarity = edit.rarity;
+      changed.push("rarity");
+    }
+    if (edit.price.trim() !== item.price.trim()) {
+      if (!edit.price.trim()) {
+        toast.error("Price cannot be empty");
+        return;
+      }
+      payload.price = edit.price;
+      changed.push("price");
+    }
+    if (edit.image !== item.image) {
+      payload.image = edit.image || null;
+      changed.push("image");
+    }
+
+    if (changed.length === 0) {
+      toast.info("No changes to save");
       return;
     }
 
     setSaving((prev) => ({ ...prev, [item.id]: true }));
     try {
-      const result = await updatePrice({ data: { itemId: item.id, price: newPrice, password } });
+      const result = await updateItem({ data: payload });
       if (result.ok) {
-        toast.success(`${item.name} price updated`);
+        toast.success(`${item.name} updated (${changed.join(", ")})`);
       } else {
         toast.error(result.error || "Save failed");
-        if (result.error === "Invalid password") {
-          handleLogout();
-        }
+        if (result.error === "Invalid password") handleLogout();
       }
     } catch {
       toast.error("Failed to save. Try again.");
@@ -222,7 +278,7 @@ function AdminPrices() {
                 Admin Access
               </h1>
               <p className="text-mist text-sm mt-3 font-pixel text-[8px] tracking-wider">
-                Enter the admin password to manage prices.
+                Enter the admin password to manage items.
               </p>
             </div>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -274,7 +330,7 @@ function AdminPrices() {
                   </span>
                 </div>
                 <h1 className="font-pixel text-2xl md:text-3xl text-frost">
-                  Price <span className="gradient-text-crystal">Editor</span>
+                  Item <span className="gradient-text-crystal">Editor</span>
                 </h1>
               </div>
               <button
@@ -434,7 +490,13 @@ function AdminPrices() {
                 </thead>
                 <tbody>
                   {filtered.map((item) => {
-                    const isOverridden = prices[item.id] !== item.price;
+                    const edit = editedItems[item.id] ?? item;
+                    const isOverridden =
+                      edit.name !== item.name ||
+                      edit.type !== item.type ||
+                      edit.rarity !== item.rarity ||
+                      edit.price.trim() !== item.price.trim() ||
+                      (edit.image ?? "") !== (item.image ?? "");
                     if (isOverridden) overriddenIds.add(item.id);
                     return (
                       <tr
@@ -444,41 +506,98 @@ function AdminPrices() {
                         }`}
                       >
                         <td className="px-3 py-3">
-                          <div className="flex items-center gap-4 max-w-full">
-                            {item.image && (
-                              <img
-                                src={item.image}
-                                alt=""
-                                className="size-9 object-contain pixelated flex-shrink-0"
+                          <div className="flex flex-col gap-2 max-w-full">
+                            <div className="flex items-center gap-3">
+                              {item.image && (
+                                <img
+                                  src={edit.image || item.image}
+                                  alt=""
+                                  className="size-9 object-contain pixelated flex-shrink-0"
+                                />
+                              )}
+                              <input
+                                type="text"
+                                value={edit.name}
+                                onChange={(e) =>
+                                  setEditedItems((prev) => ({
+                                    ...prev,
+                                    [item.id]: { ...(prev[item.id] ?? item), name: e.target.value },
+                                  }))
+                                }
+                                className="flex-1 min-w-0 bg-abyss border border-crystal/20 text-frost font-pixel text-[9px] tracking-wider px-2 py-1.5 outline-none focus:border-crystal/60 transition-colors"
                               />
-                            )}
-                            <span className="font-pixel text-[9px] tracking-wider uppercase text-frost leading-tight truncate min-w-0">
-                              {item.name}
-                            </span>
+                            </div>
+                            <input
+                              type="text"
+                              value={edit.image ?? ""}
+                              onChange={(e) =>
+                                setEditedItems((prev) => ({
+                                  ...prev,
+                                  [item.id]: {
+                                    ...(prev[item.id] ?? item),
+                                    image: e.target.value || undefined,
+                                  },
+                                }))
+                              }
+                              placeholder="Image URL"
+                              className="w-full bg-abyss border border-crystal/10 text-mist font-pixel text-[7px] tracking-wider px-2 py-1 outline-none focus:border-crystal/40 transition-colors placeholder:text-mist/30"
+                            />
                           </div>
                         </td>
                         <td className="px-3 py-3 hidden sm:table-cell">
-                          <span className="font-pixel text-[8px] tracking-widest uppercase text-mist">
-                            {item.type}
-                          </span>
+                          <select
+                            value={edit.type}
+                            onChange={(e) =>
+                              setEditedItems((prev) => ({
+                                ...prev,
+                                [item.id]: {
+                                  ...(prev[item.id] ?? item),
+                                  type: e.target.value as ItemType,
+                                },
+                              }))
+                            }
+                            className="w-full bg-abyss border border-crystal/20 text-frost font-pixel text-[8px] tracking-wider px-2 py-1.5 outline-none focus:border-crystal/60 transition-colors"
+                          >
+                            {ITEM_TYPES.filter((t) => t.value !== "all").map((t) => (
+                              <option key={t.value} value={t.value}>
+                                {t.label}
+                              </option>
+                            ))}
+                          </select>
                         </td>
                         <td className="px-3 py-3 hidden md:table-cell">
-                          <span className="font-pixel text-[8px] tracking-widest uppercase text-mist">
-                            {item.rarity}
-                          </span>
+                          <select
+                            value={edit.rarity}
+                            onChange={(e) =>
+                              setEditedItems((prev) => ({
+                                ...prev,
+                                [item.id]: { ...(prev[item.id] ?? item), rarity: e.target.value },
+                              }))
+                            }
+                            className="w-full bg-abyss border border-crystal/20 text-frost font-pixel text-[8px] tracking-wider px-2 py-1.5 outline-none focus:border-crystal/60 transition-colors"
+                          >
+                            {RARITIES.map((r) => (
+                              <option key={r} value={r}>
+                                {r}
+                              </option>
+                            ))}
+                          </select>
                         </td>
                         <td className="px-3 py-3">
                           <input
                             type="text"
-                            value={prices[item.id] ?? item.price}
+                            value={edit.price}
                             onChange={(e) =>
-                              setPrices((prev) => ({ ...prev, [item.id]: e.target.value }))
+                              setEditedItems((prev) => ({
+                                ...prev,
+                                [item.id]: { ...(prev[item.id] ?? item), price: e.target.value },
+                              }))
                             }
                             className="w-full bg-abyss border-2 border-crystal/20 text-loot font-pixel text-[9px] tracking-wider px-2 py-1.5 outline-none focus:border-crystal/60 transition-colors"
                           />
                         </td>
                         <td className="px-3 py-3 text-center hidden sm:table-cell">
-                          {item.price !== prices[item.id]?.trim() && (
+                          {isOverridden && (
                             <span className="font-pixel text-[7px] tracking-widest text-loot uppercase">
                               Modified
                             </span>

@@ -6,9 +6,8 @@ export function getOAuthUrl(clientId: string, redirectUri: string): string {
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: "code",
-    scope: "identify guilds",
   });
-  return `https://discord.com/oauth2/authorize?${params}`;
+  return `https://discord.com/oauth2/authorize?${params}&scope=identify%20guilds`;
 }
 
 export async function exchangeCode(

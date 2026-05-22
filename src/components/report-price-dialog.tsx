@@ -68,13 +68,6 @@ export function ReportPriceDialog({ item }: { item: ReportItem }) {
 
     setSubmitting(true);
 
-    const webhookUrl = import.meta.env.VITE_DISCORD_WEBHOOK_URL;
-    if (!webhookUrl) {
-      toast.error("Price reporting is not configured yet");
-      setSubmitting(false);
-      return;
-    }
-
     const rarityColor: Record<string, number> = {
       Common: 0x9ca3af,
       Uncommon: 0x00e5ff,
@@ -107,7 +100,7 @@ export function ReportPriceDialog({ item }: { item: ReportItem }) {
         ],
       };
 
-      const res = await fetch(webhookUrl, {
+      const res = await fetch("/api/report-price", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

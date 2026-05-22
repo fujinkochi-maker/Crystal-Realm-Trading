@@ -6,6 +6,16 @@ type PriceOverride = {
   updatedAt: string;
 };
 
+export type ItemOverride = {
+  name?: string;
+  type?: ItemType;
+  price?: string;
+  rarity?: string;
+  image?: string | null;
+  updatedBy: string;
+  updatedAt: string;
+};
+
 const CUSTOM_ITEMS_KEY = "custom-items";
 
 function getKv() {
@@ -54,9 +64,21 @@ export async function getItems(): Promise<Item[]> {
 
   for (const item of allItems) {
     try {
-      const override = (await kv.get(`price:${item.id}`, "json")) as PriceOverride | null;
-      if (override?.price) {
-        item.price = override.price;
+      const priceOverride = (await kv.get(`price:${item.id}`, "json")) as PriceOverride | null;
+      if (priceOverride?.price) {
+        item.price = priceOverride.price;
+      }
+    } catch {
+      /* skip */
+    }
+    try {
+      const itemOverride = (await kv.get(`item:${item.id}`, "json")) as ItemOverride | null;
+      if (itemOverride) {
+        if (itemOverride.name !== undefined) item.name = itemOverride.name;
+        if (itemOverride.type !== undefined) item.type = itemOverride.type;
+        if (itemOverride.rarity !== undefined) item.rarity = itemOverride.rarity;
+        if (itemOverride.price !== undefined) item.price = itemOverride.price;
+        if (itemOverride.image !== undefined) item.image = itemOverride.image ?? undefined;
       }
     } catch {
       /* skip */
@@ -82,6 +104,33 @@ export async function updateItemPrice(
 
   try {
     await kv.put(`price:${itemId}`, JSON.stringify(override));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function updateItem(
+  itemId: number,
+  overrides: Omit<ItemOverride, "updatedBy" | "updatedAt">,
+  updatedBy: string,
+): Promise<boolean> {
+  const kv = getKv();
+  if (!kv) return false;
+
+  const existing: ItemOverride | null = (await kv
+    .get(`item:${itemId}`, "json")
+    .catch(() => null)) as ItemOverride | null;
+
+  const merged: ItemOverride = {
+    ...(existing || {}),
+    ...overrides,
+    updatedBy,
+    updatedAt: new Date().toISOString(),
+  };
+
+  try {
+    await kv.put(`item:${itemId}`, JSON.stringify(merged));
     return true;
   } catch {
     return false;

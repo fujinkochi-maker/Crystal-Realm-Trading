@@ -30,6 +30,13 @@ export function Nav() {
           >
             Items
           </Link>
+          <Link
+            to="/bazaar"
+            activeProps={{ className: "text-crystal" }}
+            className="font-pixel text-[9px] tracking-[0.3em] text-frost uppercase hover:text-crystal transition-colors"
+          >
+            Bazaar
+          </Link>
           <a
             href={DISCORD_URL}
             target="_blank"

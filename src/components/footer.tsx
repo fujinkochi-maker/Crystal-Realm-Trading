@@ -23,6 +23,12 @@ export function Footer() {
           >
             Items Catalog
           </Link>
+          <Link
+            to="/bazaar"
+            className="font-pixel text-[9px] tracking-widest text-mist uppercase hover:text-crystal transition-colors"
+          >
+            Bazaar
+          </Link>
         </div>
         <a
           href={DISCORD_URL}

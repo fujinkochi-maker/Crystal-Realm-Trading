@@ -13,21 +13,25 @@ import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center bg-abyss px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Go home
-          </Link>
+        <div className="inline-block mb-6 px-3 py-2 bg-deep-space pixel-border-violet">
+          <span className="font-pixel text-[9px] tracking-[0.3em] text-crystal uppercase">
+            ◆ 404 ◆
+          </span>
         </div>
+        <h1 className="font-pixel text-5xl sm:text-6xl text-frost mb-6 text-glow-soft">
+          Lost Realm
+        </h1>
+        <p className="font-pixel text-[9px] tracking-widest text-mist mb-8">
+          The page you seek does not exist in this realm.
+        </p>
+        <Link
+          to="/"
+          className="font-pixel text-[9px] tracking-widest text-crystal uppercase border-2 border-crystal/40 px-6 py-3 hover:bg-crystal/10 hover:border-crystal transition-colors inline-block"
+        >
+          ◈ Return Home ◈
+        </Link>
       </div>
     </div>
   );
@@ -38,29 +42,34 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center bg-abyss px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+        <div className="inline-block mb-6 px-3 py-2 bg-deep-space pixel-border-gold">
+          <span className="font-pixel text-[9px] tracking-[0.3em] text-loot uppercase">
+            ◆ Error ◆
+          </span>
+        </div>
+        <h1 className="font-pixel text-3xl sm:text-4xl text-frost mb-6 text-glow-soft">
+          Realm Disturbance
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+        <p className="font-pixel text-[9px] tracking-widest text-mist mb-8">
+          Something went wrong on our end. Try again or head back home.
         </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
+        <div className="flex flex-wrap justify-center gap-3">
           <button
             onClick={() => {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="font-pixel text-[9px] tracking-widest text-crystal uppercase border-2 border-crystal/40 px-5 py-3 hover:bg-crystal/10 hover:border-crystal transition-colors cursor-pointer"
           >
-            Try again
+            ◈ Try Again ◈
           </button>
           <a
             href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            className="font-pixel text-[9px] tracking-widest text-mist uppercase border-2 border-crystal/20 px-5 py-3 hover:border-crystal/60 hover:text-frost transition-colors"
           >
-            Go home
+            Go Home
           </a>
         </div>
       </div>
@@ -73,14 +82,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Crystal Realms Trading Hub" },
+      {
+        name: "description",
+        content: "Crystal Realms Trading Hub — Item Catalog, Bazaar & Trading Community",
+      },
+      { name: "author", content: "Crystal Realms" },
+      { property: "og:title", content: "Crystal Realms Trading Hub" },
+      {
+        property: "og:description",
+        content: "Item Catalog, Bazaar & Trading Community for Crystal Realms.",
+      },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:site", content: "@CrystalRealms" },
     ],
     links: [
       {

@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "tanstack-start-app",
+  "name": "crystalrealmtrading",
   "compatibility_date": "2025-09-24",
   "compatibility_flags": ["nodejs_compat"],
   "main": "src/server.ts",
@@ -8,5 +8,7 @@
     "DISCORD_CLIENT_ID": "1507062901020561471",
     "DISCORD_GUILD_ID": "1507037495341220001",
     "APP_URL": "https://crystalrealmtrading.fujinkochi.workers.dev",
+    "ADMIN_PASSWORD": "crtadmin*@",
   },
+  "kv_namespaces": [{ "binding": "PRICE_OVERRIDES", "id": "2857fc24bd6945d3a0f676a5e82a59b2" }],
 }

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Search, ArrowUpDown, Filter } from "lucide-react";
-import { ITEMS, type ItemType } from "@/data/items";
+import { type ItemType } from "@/data/items";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Nav } from "@/components/nav";
@@ -44,6 +44,15 @@ export const Route = createFileRoute("/items")({
   component: ItemsPage,
 });
 
+function parsePriceFirst(p: string): number {
+  const first = p.split(/[-–—+]/)[0].trim();
+  const hasK = /k/i.test(first);
+  const cleaned = first.replace(/[^0-9.]/g, "");
+  const val = parseFloat(cleaned);
+  if (isNaN(val)) return 0;
+  return hasK ? val * 1000 : val;
+}
+
 function ItemsPage() {
   const items = Route.useLoaderData();
   const { search, type: typeFilter, sort: sortDir } = Route.useSearch();
@@ -57,15 +66,6 @@ function ItemsPage() {
   }
   function setSortDir(val: "none" | "low" | "high") {
     navigate({ search: (prev) => ({ ...prev, sort: val }) });
-  }
-
-  function parsePriceFirst(p: string): number {
-    const first = p.split(/[-–—+]/)[0].trim();
-    const hasK = /k/i.test(first);
-    const cleaned = first.replace(/[^0-9.]/g, "");
-    const val = parseFloat(cleaned);
-    if (isNaN(val)) return 0;
-    return hasK ? val * 1000 : val;
   }
 
   const filtered = useMemo(() => {
